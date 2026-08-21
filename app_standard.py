@@ -24,22 +24,26 @@ from langchain_classic.memory import ConversationBufferMemory
 
 
 # ============================================================
+# ============================================================
 # SETUP
 # ============================================================
 
-pytesseract.pytesseract.tesseract_cmd = (
-    r'C:\Program Files\Tesseract-OCR\tesseract.exe'
-)
+import platform
 
-POPPLER_PATH = (
-    r"C:\Release-26.02.0-0\poppler-26.02.0\Library\bin"
-)
+# Platform-specific paths for Tesseract and Poppler
+if platform.system() == "Windows":
+    pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+    POPPLER_PATH = r"C:\Release-26.02.0-0\poppler-26.02.0\Library\bin"
+else:
+    # Linux (Streamlit Cloud / Ubuntu)
+    pytesseract.pytesseract.tesseract_cmd = '/usr/bin/tesseract'
+    POPPLER_PATH = '/usr/bin'
 
 load_dotenv()
 
 ENV_API_KEY = os.getenv(
     "MISTRAL_API_KEY",
-    ""
+    ""  # Default empty string
 )
 
 st.set_page_config(
