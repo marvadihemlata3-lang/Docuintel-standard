@@ -66,7 +66,4 @@ Marvadi Hemlata
 
 ## Contact
 
-LinkedIn: Contact info
-Your profile
-
-linkedin.com/in/hemlata-marvadi-b31000382
+LinkedIn: linkedin.com/in/hemlata-marvadi-b31000382
