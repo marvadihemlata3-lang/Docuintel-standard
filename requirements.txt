@@ -1,14 +1,11 @@
-# ============================================================
-# requirements.txt — Teeno Packages Ke Liye
-# ============================================================
-streamlit
-PyPDF2
-pdfplumber
-pytesseract
-pdf2image
-Pillow
-langchain
-langchain-mistralai
-langchain-community
-chromadb
-python-dotenv
+streamlit>=1.28.0
+pdfplumber>=0.10.0
+pytesseract>=0.3.10
+pdf2image>=1.16.0
+langchain-geminiai>=0.0.5
+langchain-community>=0.0.10
+chromadb>=0.4.22
+pypdf>=3.17.0
+python-dotenv>=1.0.0
+pillow>=10.0.0
+numpy>=1.24.0

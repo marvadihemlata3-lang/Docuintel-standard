@@ -16,12 +16,11 @@ from dotenv import load_dotenv
 import pdfplumber
 import pytesseract
 from pdf2image import convert_from_bytes
-from langchain_mistralai import MistralAIEmbeddings, ChatMistralAI
+from langchain_google_genai import GoogleGenerativeAIEmbeddings ,ChatGoogleGenerativeAI
 from langchain_community.vectorstores import Chroma
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_classic.chains import ConversationalRetrievalChain
 from langchain_classic.memory import ConversationBufferMemory
-
 
 # ============================================================
 # ============================================================
@@ -42,7 +41,7 @@ else:
 load_dotenv()
 
 ENV_API_KEY = os.getenv(
-    "MISTRAL_API_KEY",
+    "GEMINI_API_KEY",
     ""  # Default empty string
 )
 
@@ -280,17 +279,22 @@ def generate_db_id(uploaded_files):
 # ============================================================
 # VECTOR DB
 # ============================================================
-
+class SafeGoogleGenerativeAIEmbeddings(GoogleGenerativeAIEmbeddings):
+    def embed_query(self, text):
+        return super().embed_query(str(text))
+    
 def get_vector_db(
     chunks_meta,
     api_key,
     persist_path
 ):
 
-    embeddings = MistralAIEmbeddings(
-        model="mistral-embed",
-        api_key=api_key
-    )
+
+    embeddings = SafeGoogleGenerativeAIEmbeddings(
+    model="gemini-embedding-001",  # Model name strictly yeh rakhein (Stable standard)
+     google_api_key=api_key
+)
+    
 
     # ------------------------------------------------------------
     # LOAD EXISTING DATABASE
@@ -408,14 +412,23 @@ CRITICAL RULES:
 3. Do NOT summarize the document.
 4. Do NOT say "I don't know" or any other generic response.
 5. Be concise and direct.
-"""
+Context:
+{context}"""
 
+    # Ab proper LangChain Template banayein (Taki koi bhi red line error na aaye)
+    from langchain_core.prompts import ChatPromptTemplate
+
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", system_msg),
+        ("human", "{question}")
+])
+    
     # ------------------------------------------------------------
     # MISTRAL LLM WITH SYSTEM PROMPT
     # ------------------------------------------------------------
-    llm = ChatMistralAI(
-        model_name="mistral-small-latest",
-        mistral_api_key=api_key,
+    llm = ChatGoogleGenerativeAI(
+        model="gemini-3.6-flash",
+        google_api_key=api_key,
         temperature=0
     )
 
@@ -442,15 +455,20 @@ CRITICAL RULES:
         memory=memory,
         return_source_documents=True,
         output_key="answer",
-        verbose=False
+        verbose=False,
+        combine_docs_chain_kwargs={"prompt": prompt}
     )
 
     # ------------------------------------------------------------
     # INJECT SYSTEM PROMPT IN USER MESSAGE
     # ------------------------------------------------------------
-    formatted_query = f"{system_msg}\n\nUser Question: {query}"
-    
-    result = chain.invoke({"question": formatted_query})
+    query = str(query).strip()
+    print("DEBUG QUERY:", repr(query))
+
+    result = chain.invoke({
+        "question": query
+    })
+
     answer = result["answer"]
 
     # ------------------------------------------------------------
@@ -499,7 +517,7 @@ with st.sidebar:
     else:
 
         api_key = st.text_input(
-            "Mistral API Key",
+            "Gimini API Key",
             type="password"
         )
 
@@ -726,7 +744,7 @@ if uploaded_files and api_key:
     # --------------------------------------------------------
 
     persist_dir = (
-        f"./chroma_standard_"
+        f"./chroma_standard_new_"
         f"{current_signature}"
     )
 
